@@ -3,26 +3,18 @@ class FFormInputElement extends CFormInputElement
 {
   public $baseType;
 
-  protected $defaultTemplate = "<div class=\"text-container\">\n{label}\n<div class=\"pdb\"><span class=\"inp_container\">{input}</span>\n{hint}\n{error}</div>\n</div>\n";
+  public $defaultLayout = "<div class=\"text-container\">\n{label}\n<div class=\"pdb\"><span class=\"inp_container\">{input}</span>\n{hint}\n{error}</div>\n</div>\n";
 
   private $_label;
 
-  /**
-   * @return string
-   */
-  public function render()
+  public function __construct($config, $parent)
   {
-    if( $this->type === 'hidden' )
-      return $this->renderInput();
+    /**
+     * Уничтожается публичное свойство, чтобы заработали магичкские метобы _get, _set из CFormElement
+     */
+    unset($this->layout);
 
-    $output = array(
-      '{label}' => $this->renderLabel(),
-      '{input}' => $this->renderInput(),
-      '{hint}'  => $this->renderHint(),
-      '{error}' => $this->getParent()->showErrorSummary ? '' : $this->renderError(),
-    );
-
-    return strtr($this->getLayout(), $output);
+    parent::__construct($config, $parent);
   }
 
   public function getLabel()
@@ -33,52 +25,42 @@ class FFormInputElement extends CFormInputElement
       return $this->getParent()->getModel()->getAttributeLabel(preg_replace('/(\[\w+\])?(\w+)/', '$2', $this->name));
   }
 
-  /**
-   * Alias of getTemplate()
-   *
-   * @return string
-   */
-  protected function getLayout()
-  {
-    return $this->getTemplate();
-  }
-
-  /**
-   * Получение шаблона отображения для каждого из типов полей
-   * Для более общего отображения разных классов одинаковых типов полей
-   * используется свойство baseType
-   *
-   * Если оно не установлено и не существует метод получения шаблона для текущего типа поля,
-   * то возвращает defaultLayout, общий для всех полей
-   *
-   * @return string
-   */
-  protected function getTemplate()
+  public function getLayout()
   {
     if( !empty($this->baseType) )
       $typeName = ucfirst($this->baseType);
     else
       $typeName = ucfirst($this->type);
 
-    $methodName = 'get' . $typeName . 'Template';
+    $methodName = 'get' . $typeName . 'Layout';
 
     if( method_exists($this, $methodName) )
       return $this->$methodName();
-    else
-      return $this->getDefaultTemplate();
+
+    if( isset($this->attributes['layout']) )
+      return $this->attributes['layout'];
+
+    $rootParent = $this->getRootParent();
+    if( isset($rootParent->elementLayout) && $rootParent->elementLayout !== null )
+      return $rootParent->elementLayout;
+
+    return $this->defaultLayout;
   }
 
-  /**
-   * Получение общего для всех полей шаблона отображения
-   *
-   * @return string
-   */
-  protected function getDefaultTemplate()
+  protected function getRootParent()
   {
-    return $this->defaultTemplate;
+    if( !($this->parent instanceof CForm) )
+      return $this->parent;
+
+   $parent = $this->parent;
+
+    while( $parent instanceof CForm && $parent->parent instanceof CForm )
+      $parent = $parent->parent;
+
+    return $parent;
   }
 
-  protected function getFileTemplate()
+  protected function getFileLayout()
   {
     return "<div class=\"text-container\">
               {label}
@@ -93,7 +75,7 @@ class FFormInputElement extends CFormInputElement
             </div>";
   }
 
-  public function getCheckboxlistTemplate()
+  public function getCheckboxlistLayout()
   {
     $template = "<div class=\"clearfix m10\" style=\"padding-left: 163px\">";
 
@@ -112,5 +94,4 @@ class FFormInputElement extends CFormInputElement
 
     return $template;
   }
-
 }

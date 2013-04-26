@@ -1,5 +1,11 @@
 <?php
 /**
+ * @author Alexey Tatarinov <tatarinov@shogo.ru>, Sergey Glagolev <glagolev@shogo.ru>, Nikita Melnikov <melnikov@shogo.ru>
+ * @link https://github.com/shogodev/argilla/
+ * @copyright Copyright &copy; 2003-2013 Shogo
+ * @license http://argilla.ru/LICENSE
+ * @package frontend.components.form
+ *
  * @property string returnUrl
  * @property string successMessage
  */
@@ -10,6 +16,12 @@ class FForm extends CForm
   public $formName;
 
   public $layout = "{title}\n{elements}\n<div class=\"text-container form-hint\">{description}</div>\n<div class=\"form-submit\">{buttons}</div>\n";
+
+  /**
+   * Заменяет шаблон элементов формы по умолчанию на задвнный
+   * @var string
+   */
+  public $elementLayout;
 
   public $inputElementClass = 'FFormInputElement';
 
@@ -47,17 +59,17 @@ class FForm extends CForm
 
   public function __construct($config, $model = null, $parent = null)
   {
-    if( is_string($config) /*&& strpos($config, '.') === false*/ )
+    if( is_string($config) )
     {
-      $pathToForm     = self::$DEFAULT_FORMS_PATH.$config;
+      $pathToForm = self::$DEFAULT_FORMS_PATH.$config;
       $this->formName = get_class($model);
     }
     else
     {
-      //$pathToForm     = get_class($model);
-      //$this->formName = substr($config, strrpos($config, '.') + 1);
-      $pathToForm     = $config;
-      $this->formName = $config['name'];
+      $pathToForm = $config;
+
+      if( isset($config['name']) )
+        $this->formName = $config['name'];
     }
 
     parent::__construct($pathToForm, $model, $parent);
