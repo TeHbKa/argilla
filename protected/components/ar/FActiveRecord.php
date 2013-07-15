@@ -6,7 +6,7 @@
  * @license http://argilla.ru/LICENSE
  * @package frontend.componetns.ar
  */
-class FActiveRecord extends CActiveRecord
+abstract class FActiveRecord extends CActiveRecord
 {
   /**
    * @param string $className
